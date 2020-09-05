@@ -1,5 +1,5 @@
-Neosolva API client
-===================
+Neosolva PHP API client
+=======================
 
 [![Build Status](https://travis-ci.org/Neosolva/php-api-client.svg?branch=master)](https://travis-ci.org/Neosolva/php-api-client) 
 [![Latest Stable Version](https://poser.pugx.org/neosolva/php-api-client/v/stable)](https://packagist.org/packages/neosolva/php-api-client) 
@@ -47,14 +47,23 @@ $client = Client::create('https://...', 'username', 'password');
 ### Make a request
 
 ```php
+# 
 # GET operation
+#
+
 $response = $client->get('/foo');
 
+# 
 # POST operation
+#
+
+$data = [
+    'foo' => 'bar',
+    'baz' => 'qux'
+];
+
 $response = $client->post('/bar', [
-    'json' => [
-        'qux' => true
-    ]
+    'json' => $data
 ]);
 ```
 
