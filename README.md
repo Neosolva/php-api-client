@@ -1,6 +1,11 @@
 Neosolva API client
 ===================
 
+[![Build Status](https://travis-ci.org/Neosolva/php-api-client.svg?branch=master)](https://travis-ci.org/Neosolva/php-api-client) 
+[![Latest Stable Version](https://poser.pugx.org/neosolva/php-api-client/v/stable)](https://packagist.org/packages/neosolva/php-api-client) 
+[![Latest Unstable Version](https://poser.pugx.org/neosolva/php-api-client/v/unstable)](https://packagist.org/packages/neosolva/php-api-client) 
+[![Total Downloads](https://poser.pugx.org/neosolva/php-api-client/downloads)](https://packagist.org/packages/neosolva/php-api-client)
+
 This component helps you to create a client for an API powered by **Neosolva**.
 
 The authentication resides on [Basic HTTP authentication](https://fr.wikipedia.org/wiki/Authentification_HTTP). 
@@ -58,7 +63,7 @@ The response is an instance of interface ```Psr\Http\Message\ResponseInterface``
 ### Decode JSON response
 
 All API's powered by Neosolva returns contents as JSON. The client provides the method ```decode()``` to 
-get decoded data of a response as array:
+get decoded data from a response:
 
 ```php
 $data = $client->decode($response); # array
