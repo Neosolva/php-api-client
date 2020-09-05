@@ -6,6 +6,11 @@ use Psr\Http\Message\ResponseInterface;
 
 class Client extends \GuzzleHttp\Client
 {
+    /**
+     * Shortcut method to create the client with required parameters.
+     *
+     * @static
+     */
     public static function create(string $url, string $username, string $apiKey, array $options = []): self
     {
         return new self(array_merge($options, [
