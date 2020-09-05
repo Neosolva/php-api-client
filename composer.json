@@ -18,8 +18,7 @@
   },
   "require": {
     "php": "^7.2.5",
-    "guzzlehttp/guzzle": "^7.0",
-    "symfony/serializer": "^5.1"
+    "guzzlehttp/guzzle": "^7.0"
   },
   "config": {
     "sort-packages": true

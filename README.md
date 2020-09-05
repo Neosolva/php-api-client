@@ -1,7 +1,10 @@
 Neosolva API client
 ===================
 
-This component provides the client for all API's powered by **Neosolva**.
+This component helps you to create a client for an API powered by **Neosolva**.
+
+The authentication resides on [Basic HTTP authentication](https://fr.wikipedia.org/wiki/Authentification_HTTP). 
+The username and the API key is provided by your sales partner.
 
 Installation
 ============
@@ -22,6 +25,9 @@ Usage
 
 The class ```Neosolva\Component\Api\Client``` extends class ```GuzzleHttp\Client```. 
 The static method ```create()``` helps you to configure the client.
+
+Please see [documentation of Guzzle client](http://docs.guzzlephp.org/en/stable/quickstart.html) to 
+now khow to use the client.
 
 ### Create the client
 
@@ -47,12 +53,11 @@ $response = $client->post('/bar', [
 ]);
 ```
 
-Please see [documentation of Guzzle client](http://docs.guzzlephp.org/en/stable/quickstart.html) to 
-now khow to use the client.
+The response is an instance of interface ```Psr\Http\Message\ResponseInterface```.
 
 ### Decode JSON response
 
-All API's powered by Neosolva returns contents as JSON. The client provides the method ```decode``` to 
+All API's powered by Neosolva returns contents as JSON. The client provides the method ```decode()``` to 
 get decoded data of a response as array:
 
 ```php
@@ -60,14 +65,6 @@ $data = $client->decode($response); # array
 ```
 
 ### Miscellaneous
-
-#### Encode JSON data
-
-The client helps you to encode data as JSON by providing the method ```encode()```:
-
-```php
-$json = $client->encode(['foo' => 'bar']); # string
-```
 
 #### Retrieve Base URI
 
