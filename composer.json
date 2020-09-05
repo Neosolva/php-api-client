@@ -1,0 +1,30 @@
+{
+  "name": "neosolva/php-api-client",
+  "type": "library",
+  "homepage": "https://github.com/Neosolva/php-api-client",
+  "description": "Neosolva API client",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "Joanis ROUANET",
+      "email": "jrouanet@agrege.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {"Neosolva\\Component\\Api\\": "src/"}
+  },
+  "autoload-dev": {
+    "psr-4": { "Neosolva\\Component\\Api\\Tests\\": "tests/" }
+  },
+  "require": {
+    "php": "^7.2.5",
+    "guzzlehttp/guzzle": "^7.0",
+    "symfony/serializer": "^5.1"
+  },
+  "config": {
+    "sort-packages": true
+  },
+  "require-dev": {
+    "symfony/var-dumper": "^5.1"
+  }
+}
