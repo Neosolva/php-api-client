@@ -33,6 +33,6 @@ class Client extends \GuzzleHttp\Client
 
     public function getBaseUri(): string
     {
-        return $this->getConfig('base_uri');
+        return $this->getConfig('base_uri') ?: '';
     }
 }
