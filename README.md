@@ -94,3 +94,14 @@ The client provides a shortcut to retrieve the configured base URI:
 ```php
 $baseUri = $client->getBaseUri(); # string
 ```
+
+Update logs
+-----------
+
+### v1.0.2
+
+- Added method ```Client::decodeData()```
+
+### v1.0.1
+
+- Updated Guzzle package version from ```"guzzlehttp/guzzle": "^7.0"``` to ```"guzzlehttp/guzzle": "^6.0 || ^7.0"```
