@@ -75,7 +75,14 @@ All API's powered by Neosolva returns contents as JSON. The client provides the 
 get decoded data from a response:
 
 ```php
-$data = $client->decode($response); # array
+$data = $client->decode($response, false); # array|bool|float|int|object|string|null
+$data = $client->decode($response, true); # array
+```
+
+To get associative results as array, use the shortcut method ```decodeData()```:
+
+```php
+$data = $client->decodeData($response); # array
 ```
 
 ### Miscellaneous

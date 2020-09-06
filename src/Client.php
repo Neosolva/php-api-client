@@ -21,14 +21,19 @@ class Client extends \GuzzleHttp\Client
         ]));
     }
 
+    public function decodeData(ResponseInterface $response): array
+    {
+        return (array) $this->decode($response, true);
+    }
+
     /**
      * @return array|bool|float|int|object|string|null
      */
-    public function decode(ResponseInterface $response)
+    public function decode(ResponseInterface $response, bool $assoc = false)
     {
         $body = $response->getBody()->getContents();
 
-        return \GuzzleHttp\json_decode($body);
+        return \GuzzleHttp\json_decode($body, $assoc);
     }
 
     public function getBaseUri(): string
