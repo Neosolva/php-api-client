@@ -125,7 +125,7 @@ class SearchRequest implements \IteratorAggregate
      */
     public function iterate(array $options = []): Generator
     {
-        $bulkRequest = $this->client->createBatch();
+        $batchRequest = $this->client->createBatch();
         $nbPages = $this->getNbPages();
         $nextPage = $this->page;
 
@@ -133,11 +133,11 @@ class SearchRequest implements \IteratorAggregate
 
         while ($nextPage <= $nbPages) {
             $options['query']['page'] = $nextPage;
-            $bulkRequest->get($this->path, $options);
+            $batchRequest->get($this->path, $options);
             ++$nextPage;
         }
 
-        foreach ($bulkRequest->execute() as $records) {
+        foreach ($batchRequest->execute() as $records) {
             foreach ($this->getResultFromArray($records) as $record) {
                 yield $record;
             }
