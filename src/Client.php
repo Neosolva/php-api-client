@@ -7,7 +7,10 @@ use Neosolva\Component\Api\Exception\ClientException;
 use Neosolva\Component\Api\Exception\RequestException;
 use Neosolva\Component\Api\Request\BatchRequest;
 use Neosolva\Component\Api\Request\SearchRequest;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
@@ -19,12 +22,15 @@ class Client
     private ?string $token = null;
     private ?DateTime $tokenExpiresAt = null;
     private ?ResponseInterface $response = null;
+    private CacheInterface $cache;
 
     public function __construct(private HttpClientInterface $httpClient,
                                 private string $username,
                                 private string $password,
-                                private array $defaultOptions = [])
+                                private array $defaultOptions = [],
+                                ?CacheInterface $cache = null)
     {
+        $this->cache = $cache ?: new ArrayAdapter();
     }
 
     public static function create(string $apiUrl, string $username, string $password, array $defaultOptions = []): self
@@ -97,14 +103,12 @@ class Client
 
     public function request(string $method, string $path, array $options = []): ResponseInterface
     {
-        if ($this->tokenExpiresAt && $this->tokenExpiresAt <= new DateTime()) {
-            $this->token = null;
-            $this->tokenExpiresAt = null;
-        }
+        $tokenCacheKey = sprintf('%s.%d', str_replace('\\', '_', self::class), spl_object_id($this));
+        $token = $this->cache->get($tokenCacheKey, function (ItemInterface $item) {
+            dump('test');
+            $item->expiresAfter(60*50);
+            $this->response = null;
 
-        $this->response = null;
-
-        if (!$this->token) {
             try {
                 $this->response = $this->httpClient->request('POST', '/authenticate', [
                     'json' => [
@@ -116,11 +120,10 @@ class Client
                 throw new RequestException($exception->getMessage(), 0, $exception);
             }
 
-            $this->token = $this->getResult($this->response)['token'];
-            $this->tokenExpiresAt = new DateTime('+45 minutes');
-        }
+            return $this->getResult($this->response)['token'];
+        });
 
-        $options['headers']['Authorization'] = sprintf('Bearer %s', $this->token);
+        $options['headers']['Authorization'] = sprintf('Bearer %s', $token);
         $this->response = null;
 
         try {
@@ -148,5 +151,72 @@ class Client
         }
 
         return $this->response;
+    }
+
+    public function getHttpClient(): HttpClientInterface
+    {
+        return $this->httpClient;
+    }
+
+    public function getUsername(): string
+    {
+        return $this->username;
+    }
+
+    public function setUsername(string $username): self
+    {
+        if ($username !== $this->username) {
+            $this->clearToken();
+        }
+
+        $this->username = $username;
+
+        return $this;
+    }
+
+    public function getPassword(): string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): self
+    {
+        if ($password !== $this->password) {
+            $this->clearToken();
+        }
+
+        $this->password = $password;
+
+        return $this;
+    }
+
+    public function getDefaultOptions(): array
+    {
+        return $this->defaultOptions;
+    }
+
+    public function setDefaultOptions(array $defaultOptions): self
+    {
+        $this->defaultOptions = $defaultOptions;
+
+        return $this;
+    }
+
+    public function getToken(): ?string
+    {
+        return $this->token;
+    }
+
+    public function getTokenExpiresAt(): ?DateTime
+    {
+        return $this->tokenExpiresAt;
+    }
+
+    public function clearToken(): self
+    {
+        $this->token = null;
+        $this->tokenExpiresAt = null;
+
+        return $this;
     }
 }
