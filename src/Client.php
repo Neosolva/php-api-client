@@ -2,42 +2,151 @@
 
 namespace Neosolva\Component\Api;
 
-use Psr\Http\Message\ResponseInterface;
+use DateTime;
+use Neosolva\Component\Api\Exception\ClientException;
+use Neosolva\Component\Api\Exception\RequestException;
+use Neosolva\Component\Api\Request\BatchRequest;
+use Neosolva\Component\Api\Request\SearchRequest;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Contracts\HttpClient\ResponseInterface;
 
-class Client extends \GuzzleHttp\Client
+class Client
 {
-    /**
-     * Shortcut method to create the client with required parameters.
-     *
-     * @static
-     */
-    public static function create(string $url, string $username, string $apiKey, array $options = []): self
+    public const MAX_CONCURRENT_REQUESTS = 50;
+
+    private ?string $token = null;
+    private ?DateTime $tokenExpiresAt = null;
+    private ?ResponseInterface $response = null;
+
+    public function __construct(private HttpClientInterface $httpClient,
+                                private string $username,
+                                private string $password,
+                                private array $defaultOptions = [])
     {
-        return new self(array_merge($options, [
-            'base_uri' => $url,
-            'timeout' => 0,
-            'allow_redirects' => false,
-            'auth' => [$username, $apiKey],
+    }
+
+    public static function create(string $apiUrl, string $username, string $password, array $defaultOptions = []): self
+    {
+        return new self(HttpClient::create([
+            'base_uri' => $apiUrl,
+            'verify_peer' => false,
+            'verify_host' => false,
+        ]), $username, $password, $defaultOptions);
+    }
+
+    public function get(string $path, array $options = []): self
+    {
+        $this->request('GET', $path, $options);
+
+        return $this;
+    }
+
+    public function getItem(string $path, int|string $id, array $options = []): self
+    {
+        $path = sprintf('%s/%s', $path, $id);
+        $this->request('GET', $path, $options);
+
+        return $this;
+    }
+
+    public function post(string $path, array $data = [], array $options = []): self
+    {
+        $this->request('POST', $path, array_merge($options, [
+            'json' => $data,
         ]));
+
+        return $this;
     }
 
-    public function decodeData(ResponseInterface $response): array
+    public function put(string $path, array $data = [], array $options = []): self
     {
-        return (array) $this->decode($response, true);
+        $this->request('PUT', $path, array_merge($options, [
+            'json' => $data,
+        ]));
+
+        return $this;
     }
 
-    /**
-     * @return array|bool|float|int|object|string|null
-     */
-    public function decode(ResponseInterface $response, bool $assoc = false)
+    public function patch(string $path, array $data = [], array $options = []): self
     {
-        $body = $response->getBody()->getContents();
+        $this->request('PATCH', $path, array_merge($options, [
+            'json' => $data,
+        ]));
 
-        return \GuzzleHttp\json_decode($body, $assoc);
+        return $this;
     }
 
-    public function getBaseUri(): string
+    public function delete(string $path, array $options = []): self
     {
-        return $this->getConfig('base_uri') ?: '';
+        $this->request('DELETE', $path, $options);
+
+        return $this;
+    }
+
+    public function search(string $path, array $filters = [], array $options = []): SearchRequest
+    {
+        return new SearchRequest($this, $path, $filters, 1, $options);
+    }
+
+    public function createBatch(): BatchRequest
+    {
+        return new BatchRequest($this);
+    }
+
+    public function request(string $method, string $path, array $options = []): ResponseInterface
+    {
+        if ($this->tokenExpiresAt && $this->tokenExpiresAt <= new DateTime()) {
+            $this->token = null;
+            $this->tokenExpiresAt = null;
+        }
+
+        $this->response = null;
+
+        if (!$this->token) {
+            try {
+                $this->response = $this->httpClient->request('POST', '/authenticate', [
+                    'json' => [
+                        'username' => $this->username,
+                        'password' => $this->password,
+                    ],
+                ]);
+            } catch (TransportExceptionInterface $exception) {
+                throw new RequestException($exception->getMessage(), 0, $exception);
+            }
+
+            $this->token = $this->getResult($this->response)['token'];
+            $this->tokenExpiresAt = new DateTime('+45 minutes');
+        }
+
+        $options['headers']['Authorization'] = sprintf('Bearer %s', $this->token);
+        $this->response = null;
+
+        try {
+            return $this->response = $this->httpClient->request($method, $path, array_merge($this->defaultOptions, $options));
+        } catch (TransportExceptionInterface $exception) {
+            throw new RequestException($exception->getMessage(), 0, $exception);
+        }
+    }
+
+    public function getResult(?ResponseInterface $response = null): array
+    {
+        $response = $response ?: $this->getResponse();
+
+        try {
+            return $response->toArray();
+        } catch (\Throwable $exception) {
+            throw new RequestException($exception->getMessage(), 0, $exception);
+        }
+    }
+
+    public function getResponse(): ResponseInterface
+    {
+        if (!$this->response) {
+            throw new ClientException('No response found - Please make a request first.');
+        }
+
+        return $this->response;
     }
 }
