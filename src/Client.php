@@ -105,7 +105,6 @@ class Client
     {
         $tokenCacheKey = sprintf('%s.%d', str_replace('\\', '_', self::class), spl_object_id($this));
         $token = $this->cache->get($tokenCacheKey, function (ItemInterface $item) {
-            dump('test');
             $item->expiresAfter(60*50);
             $this->response = null;
 
