@@ -125,7 +125,7 @@ class SearchRequest implements \IteratorAggregate
      */
     public function iterate(array $options = []): Generator
     {
-        $batchRequest = $this->client->createBatch();
+        $batchRequest = $this->client->batch();
         $nbPages = $this->getNbPages();
         $nextPage = $this->page;
 

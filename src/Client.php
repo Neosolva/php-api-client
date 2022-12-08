@@ -90,7 +90,7 @@ class Client
         return new SearchRequest($this, $path, $filters, 1, $options);
     }
 
-    public function createBatch(): BatchRequest
+    public function batch(): BatchRequest
     {
         return new BatchRequest($this);
     }
